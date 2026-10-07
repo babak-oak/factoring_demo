@@ -1,0 +1,576 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Фінансування тендерів SmartTender</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Onest:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: кабінет постачальника — навбар, список перемог як робочий реєстр, модальні кроки поверх; зверху тонка демо-панель прототипу */
+:root{
+  --bg:#F2F5FA; --surface:#FFFFFF; --surface-2:#F7F9FC; --ink:#13213A; --muted:#5A6A82; --line:#DBE2EC;
+  --brand:#1D5FD0; --brand-soft:#E6EEFC; --brand-ink:#FFFFFF; --nav:#0F2A56; --nav-ink:#E8EEF9;
+  --ok:#17845A; --ok-soft:#E3F4EC; --warn:#A86A12; --warn-soft:#FBF1DF; --bad:#BF3A33; --bad-soft:#FBE7E5;
+  --demo:#7A5BD6; --demo-soft:#F1ECFD; --shadow:0 18px 50px rgba(15,42,86,.18);
+  --f-display:"Onest","Golos Text",system-ui,sans-serif; --f-body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0D1421; --surface:#152035; --surface-2:#111B2D; --ink:#E5ECF7; --muted:#93A3BB; --line:#26344C;
+  --brand:#5C90F2; --brand-soft:#1B2C4D; --brand-ink:#0B1426; --nav:#0A152B; --nav-ink:#DCE5F5;
+  --ok:#4CC28B; --ok-soft:#16352A; --warn:#E3AA4E; --warn-soft:#3A2E17; --bad:#F2746B; --bad-soft:#3D1D1C;
+  --demo:#A88CF5; --demo-soft:#272042; --shadow:0 18px 50px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1421; --surface:#152035; --surface-2:#111B2D; --ink:#E5ECF7; --muted:#93A3BB; --line:#26344C;
+  --brand:#5C90F2; --brand-soft:#1B2C4D; --brand-ink:#0B1426; --nav:#0A152B; --nav-ink:#DCE5F5;
+  --ok:#4CC28B; --ok-soft:#16352A; --warn:#E3AA4E; --warn-soft:#3A2E17; --bad:#F2746B; --bad-soft:#3D1D1C;
+  --demo:#A88CF5; --demo-soft:#272042; --shadow:0 18px 50px rgba(0,0,0,.5); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+button{font:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,label:focus-within{outline:2px solid var(--brand);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-size:.86em}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+
+/* demo bar */
+.demobar{background:var(--demo-soft);border-bottom:1px dashed var(--demo);padding-block:8px;padding-inline:16px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:13px}
+.demobar .tag{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--demo);font-weight:500}
+.demobar label{display:flex;gap:8px;align-items:center;color:var(--ink)}
+.demobar select{font:inherit;font-size:13px;padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:5px 12px;color:var(--muted);font-size:13px;display:flex;gap:6px;align-items:center}
+.seg button[aria-pressed="true"]{background:var(--demo);color:#fff}
+.count{background:var(--bad);color:#fff;border-radius:999px;font-size:11px;padding:0 6px;min-width:18px;text-align:center;line-height:18px}
+.demobar .reset{margin-left:auto;border:1px dashed var(--demo);background:transparent;color:var(--demo);border-radius:6px;padding:4px 10px;font-size:13px}
+
+/* nav */
+.nav{background:var(--nav);color:var(--nav-ink);padding-inline:16px}
+.nav-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:28px;min-height:58px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:9px;font-family:var(--f-display);font-weight:700;font-size:18px;letter-spacing:-.02em}
+.logo i{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#4F8DF5,#2BB3A3);display:block}
+.nav-links{display:flex;gap:4px;flex-wrap:wrap}
+.nav-links span{padding:18px 10px;font-size:14px;opacity:.72;border-bottom:2px solid transparent}
+.nav-links span.on{opacity:1;border-color:#6FA0F7}
+.user{margin-left:auto;display:flex;align-items:center;gap:12px;font-size:13px}
+.bell{position:relative;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);display:grid;place-items:center;border:0;color:inherit}
+.bell .count{position:absolute;top:-3px;right:-4px}
+.avatar{width:32px;height:32px;border-radius:50%;background:#2F4E85;display:grid;place-items:center;font-weight:600;font-size:12px}
+
+main{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 64px}
+.pagehead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px 24px;margin-bottom:18px}
+.pagehead h1{font-size:26px}
+.pagehead p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+.banner{display:flex;gap:14px;align-items:flex-start;background:var(--brand-soft);border-radius:12px;padding:14px 16px;margin-bottom:18px;font-size:14px}
+.banner b{font-family:var(--f-display)}
+.banner .ic{flex:none;width:30px;height:30px;border-radius:8px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-weight:700}
+
+/* list */
+.reg{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:minmax(0,2.5fr) minmax(0,1.05fr) minmax(0,.85fr) minmax(0,1.2fr) minmax(0,1.35fr);gap:16px;padding:16px 18px;align-items:center;border-top:1px solid var(--line)}
+.row.head{border-top:0;background:var(--surface-2);padding-block:10px;font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.t-id{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--muted)}
+.src{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);border-radius:4px;padding:0 5px;font-weight:600}
+.t-subj{font-weight:600;margin-top:3px}
+.t-cust{font-size:13px;color:var(--muted)}
+.cell-l{display:none}
+.amt{font-weight:600}
+.def b{font-weight:600}
+.def small{display:block;color:var(--muted);font-size:12.5px}
+.pill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.p-available{background:var(--brand-soft);color:var(--brand)}
+.p-submitted{background:var(--brand-soft);color:var(--brand)}
+.p-review{background:var(--warn-soft);color:var(--warn)}
+.p-offer{background:var(--ok-soft);color:var(--ok)}
+.p-account{background:var(--ok-soft);color:var(--ok)}
+.p-rejected{background:var(--bad-soft);color:var(--bad)}
+.p-na{background:var(--surface-2);color:var(--muted);font-weight:500}
+.act{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.btn{border-radius:8px;padding:9px 14px;font-weight:600;font-size:14px;border:1px solid transparent;line-height:1.2;text-align:center}
+.btn-p{background:var(--brand);color:var(--brand-ink)}
+.btn-p:hover{filter:brightness(1.07)}
+.btn-p:disabled{background:var(--line);color:var(--muted);cursor:not-allowed;filter:none}
+.btn-s{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.btn-s:hover{border-color:var(--brand);color:var(--brand)}
+.btn-l{background:none;border:0;padding:2px 0;color:var(--brand);font-weight:500;font-size:13.5px}
+.btn-demo{background:var(--demo-soft);border:1px dashed var(--demo);color:var(--demo);font-size:12.5px;padding:6px 10px;font-weight:500;border-radius:7px}
+.na-note{font-size:13px;color:var(--muted)}
+
+.offer{grid-column:1/-1;background:var(--ok-soft);border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.offer.rej{background:var(--bad-soft);display:block;font-size:14px}
+.offer.acc{background:var(--surface-2);display:block;font-size:14px;border:1px solid var(--line)}
+.kv span{display:block;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kv b{font-family:var(--f-display);font-size:19px;font-weight:600}
+.kv small{display:block;font-size:12px;color:var(--muted)}
+.offer-foot{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted);border-top:1px solid color-mix(in srgb,var(--ok) 25%,transparent);padding-top:10px}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(9,19,38,.55);display:flex;align-items:flex-start;justify-content:center;padding:max(24px,env(safe-area-inset-top,0px)) 16px 24px;overflow-y:auto;z-index:20}
+.modal{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);width:100%;max-width:680px;margin:auto 0;position:relative}
+.m-head{padding:22px 24px 6px;display:flex;gap:16px;justify-content:space-between;align-items:flex-start}
+.m-head h2{font-size:21px}
+.m-head p{margin:4px 0 0;color:var(--muted);font-size:13.5px}
+.x{border:0;background:var(--surface-2);width:34px;height:34px;border-radius:8px;color:var(--muted);font-size:20px;line-height:1;flex:none}
+.m-body{padding:12px 24px 8px}
+.m-foot{padding:16px 24px 22px;display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;align-items:center;border-top:1px solid var(--line);margin-top:14px}
+.m-foot .left{margin-right:auto}
+.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;background:var(--surface-2);border-radius:10px;padding:12px 14px;margin-bottom:16px}
+.summary .kv b{font-size:16px}
+
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.steps li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;position:relative;padding-bottom:16px}
+.steps li:not(:last-child)::after{content:"";position:absolute;left:16px;top:32px;bottom:2px;width:2px;background:var(--line)}
+.steps .n{width:32px;height:32px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-family:var(--f-display);font-weight:600;font-size:14px;background:var(--surface);color:var(--muted);position:relative;z-index:1}
+.steps h3{font-size:15.5px;margin-top:5px}
+.steps p{margin:2px 0 0;font-size:13.5px;color:var(--muted)}
+.steps .who{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--muted);margin-left:6px;font-family:var(--f-body)}
+.steps li.done .n{background:var(--ok);border-color:var(--ok);color:#fff}
+.steps li.done:not(:last-child)::after{background:var(--ok)}
+.steps li.cur .n{border-color:var(--brand);color:var(--brand);box-shadow:0 0 0 4px var(--brand-soft)}
+.steps li.fail .n{background:var(--bad);border-color:var(--bad);color:#fff}
+.doclist{margin:6px 0 0;padding-left:18px;font-size:13.5px;color:var(--ink)}
+.doclist li{margin:2px 0}
+.note{font-size:13px;color:var(--muted);background:var(--surface-2);border-radius:8px;padding:10px 12px;margin-top:4px}
+
+.ups{display:grid;gap:8px}
+.up{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.up.ok{border-color:color-mix(in srgb,var(--ok) 45%,var(--line));background:color-mix(in srgb,var(--ok-soft) 55%,var(--surface))}
+.up.err{border-color:var(--bad)}
+.up.drag{border-style:dashed;border-color:var(--brand);background:var(--brand-soft)}
+.up h4{margin:0;font-size:14.5px;font-weight:600}
+.up .req{color:var(--bad)}
+.up .hint{font-size:12.5px;color:var(--muted)}
+.up .fmt{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.up .file{grid-column:1/-1;font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;min-width:0}
+.up .file .fn{font-family:var(--f-mono);font-size:12px;overflow-wrap:anywhere}
+.up .file .bad{color:var(--bad)}
+.up .file .good{color:var(--ok);font-weight:600}
+.pick{position:relative;overflow:hidden}
+.pick input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.consent{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;margin-top:14px;font-size:13.5px;padding:12px 14px;background:var(--surface-2);border-radius:10px;cursor:pointer}
+.consent input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--brand)}
+.prog{font-size:13px;color:var(--muted)}
+
+.redirect{text-align:center;padding:10px 6px 4px}
+.redirect .bank{display:inline-flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:18px;padding:12px 18px;border:1px solid var(--line);border-radius:12px;margin:8px 0 14px}
+.redirect .bank i{width:26px;height:26px;border-radius:50%;background:var(--ok);display:block}
+
+/* mail */
+.mail{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:16px}
+.inbox{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;align-self:start}
+.inbox h2{font-size:15px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.mi{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:transparent;color:inherit;padding:12px 16px}
+.mi:last-child{border-bottom:0}
+.mi.on{background:var(--brand-soft)}
+.mi .top{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--muted)}
+.mi .subj{font-weight:500;font-size:14px;margin-top:2px}
+.mi.unread .subj{font-weight:700}
+.mi.unread .top b::before{content:"● ";color:var(--brand)}
+.letter{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0}
+.letter .meta{font-size:13px;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:16px}
+.letter .meta h2{font-size:19px;color:var(--ink);margin-bottom:6px}
+.em{max-width:600px;margin:0 auto;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.em-top{background:var(--nav);color:var(--nav-ink);padding:14px 22px}
+.em-in{padding:22px;font-size:14.5px}
+.em-in p{margin:0 0 12px}
+.em-card{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:14px 0;display:grid;gap:4px;font-size:14px}
+.em-card .r{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.em-card .r span{color:var(--muted)}
+.em-foot{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding:12px 22px}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:10px;font-size:14px;box-shadow:var(--shadow);z-index:40;max-width:calc(100% - 32px)}
+
+@media (max-width:860px){
+  .row.head{display:none}
+  .row{grid-template-columns:1fr 1fr;gap:10px 14px}
+  .row>.c-t,.row>.c-st,.row>.c-act{grid-column:1/-1}
+  .cell-l{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+  .act{flex-direction:row;flex-wrap:wrap;align-items:center}
+  .offer{grid-template-columns:1fr 1fr}
+  .mail{grid-template-columns:1fr}
+  .nav-links{display:none}
+  .summary{grid-template-columns:1fr 1fr}
+}
+@media (max-width:480px){
+  .m-head,.m-body,.m-foot{padding-inline:16px}
+  .up{grid-template-columns:1fr}
+  .summary{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){
+  .modal{animation:pop .18s ease-out}
+  @keyframes pop{from{transform:translateY(8px);opacity:.6}to{transform:none;opacity:1}}
+  .flash{animation:flash 1.4s ease-out}
+  @keyframes flash{0%{background:var(--brand-soft)}100%{background:transparent}}
+}
+</style>
+
+<div class="demobar" role="region" aria-label="Керування прототипом">
+  <span class="tag">Прототип MVP · демо-панель</span>
+  <div class="seg" role="group" aria-label="Екран">
+    <button id="v-cab" aria-pressed="true">Особистий кабінет</button>
+    <button id="v-mail" aria-pressed="false">Пошта клієнта <span class="count" id="mail-count"></span></button>
+  </div>
+  <label>Відповідь банку:
+    <select id="scenario">
+      <option value="approve">Схвалити</option>
+      <option value="reject">Відмовити</option>
+    </select>
+  </label>
+  <button class="reset" id="reset">Скинути демо</button>
+</div>
+
+<header class="nav">
+  <div class="nav-in">
+    <div class="logo"><i aria-hidden="true"></i>SmartTender</div>
+    <nav class="nav-links" aria-label="Розділи кабінету">
+      <span>Пошук торгів</span><span>Мої пропозиції</span><span class="on">Мої перемоги</span><span>Документи</span>
+    </nav>
+    <div class="user">
+      <button class="bell" id="bell" aria-label="Сповіщення">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span class="count" id="bell-count"></span>
+      </button>
+      <span class="muted" style="color:inherit;opacity:.8">ТОВ «БудТрансПостач»</span>
+      <span class="avatar">БТ</span>
+    </div>
+  </div>
+</header>
+
+<main id="main"></main>
+<div class="overlay" id="overlay" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-title" id="modal"></div></div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+(function(){
+const BANK = 'ТАСКОМБАНК';
+const LIMIT = 6000000, RATE = 21, SHARE = 0.8;      // демо-параметри пропозиції банку
+const MAXMB = 20;
+const DOCS = [
+  {key:'osv', name:'Оборотно-сальдова відомість (ОСВ)', hint:'За останні 4 квартали, по всіх рахунках', fmt:['xlsx','xls','pdf'], demo:'OSV_2025Q4-2026Q3.xlsx'},
+  {key:'f1', name:'Форма 1 — Баланс', hint:'За 2025 рік і за останній звітний квартал', fmt:['pdf'], demo:'F1_Balans_2025_2026Q2.pdf'},
+  {key:'f2', name:'Форма 2 — Звіт про фінансові результати', hint:'За 2025 рік і за останній звітний квартал', fmt:['pdf'], demo:'F2_FinRez_2025_2026Q2.pdf'},
+  {key:'contract', name:'Договір із замовником', hint:'Підписаний договір за цим тендером', auto:true},
+  {key:'charter', name:'Статут і виписка з ЄДР', hint:'Чинна редакція статуту, виписка не старша 30 днів', fmt:['pdf'], demo:'Statut_Vypyska_EDR.pdf'},
+  {key:'director', name:'Паспорт і РНОКПП керівника', hint:'Скан усіх заповнених сторінок або ID-картки з двох боків', fmt:['pdf','jpg','jpeg','png'], demo:'Pasport_RNOKPP_kerivnyk.pdf'}
+];
+const STEPS = [
+  {t:'Подати документи в банк', d:'Завантажте фінансову звітність і документи компанії. Договір за тендером додається автоматично.', who:'ви'},
+  {t:'Отримати пропозицію', d:'Банк розгляне заявку і надішле ліміт, суму за цією угодою та ставку — на пошту і в кабінет.', who:'банк'},
+  {t:'Відкрити рахунок у банку', d:'Дистанційно, на сайті '+BANK+'. На цей рахунок надійдуть кошти.', who:'ви'},
+  {t:'Отримати кошти', d:'Банк перераховує фінансування до оплати від замовника.', who:'банк'},
+  {t:'Повернути кошти і відсотки вчасно', d:'Після оплати замовником погасіть фінансування і відсотки на рахунок у банку до кінця строку.', who:'ви'}
+];
+const STATUS = {
+  available:'Фінансування доступне', submitted:'Документи подано', review:'На розгляді в банку',
+  offer:'Пропозиція отримана', rejected:'Відмова банку', account:'Відкриття рахунку в банку', na:'Недоступно'
+};
+
+const fmtM = n => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:0}).format(Math.round(n))+' грн';
+const fmtD = d => new Intl.DateTimeFormat('uk-UA',{day:'numeric',month:'long',year:'numeric'}).format(d);
+const fmtT = d => new Intl.DateTimeFormat('uk-UA',{hour:'2-digit',minute:'2-digit'}).format(d);
+const addDays = (d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const today = new Date();
+
+function seed(){
+  const T = [
+    {id:'UA-2026-09-14-004812-a', src:'Prozorro', subj:'Постачання щебеню фракції 5–20 мм', cust:'КП «Шляхове господарство міста»', amount:4860000, def:60, status:'available'},
+    {id:'UA-2026-09-02-001377-b', src:'Prozorro', subj:'Ремонт покрівлі навчального корпусу № 3', cust:'Державний педагогічний університет', amount:2340000, def:45, status:'available'},
+    {id:'№ 128455', src:'Комерційні', subj:'Постачання бетону М300 з доставкою', cust:'ТОВ «Логістичний парк Південь»', amount:3150000, def:30, status:'review', docsAt:addDays(today,-2)},
+    {id:'UA-2026-08-21-007655-c', src:'Prozorro', subj:'Поточний ремонт під’їзних доріг', cust:'КНП «Обласна клінічна лікарня»', amount:2100000, def:90, status:'offer', docsAt:addDays(today,-6)},
+    {id:'UA-2026-08-11-003301-a', src:'Prozorro', subj:'Постачання піщано-гравійної суміші', cust:'Сільська рада громади', amount:640000, def:14, status:'na'}
+  ];
+  T.forEach((t,i)=>{t.key='t'+i; t.payDate=addDays(today,t.def+5); t.signed=addDays(today,-12-i*4); if(t.status==='offer') t.offer=makeOffer(t, addDays(today,-1));});
+  return {
+    view:'cabinet', tenders:T, open:new Set(['t3']), sel:null,
+    mails:[
+      {id:'m3', at:addDays(today,-1), unread:true, kind:'offer', t:'t3'},
+      {id:'m2', at:addDays(today,-3), unread:false, kind:'available', t:'t1'},
+      {id:'m1', at:addDays(today,-4), unread:true, kind:'available', t:'t0'}
+    ]
+  };
+}
+function makeOffer(t, at){
+  const deal = Math.min(t.amount*SHARE, LIMIT);
+  return {at, limit:LIMIT, deal, rate:RATE, term:t.def, cost:deal*RATE/100*t.def/365, valid:addDays(at,10)};
+}
+let S = seed();
+const $ = id => document.getElementById(id);
+const byKey = k => S.tenders.find(t=>t.key===k);
+
+/* ---------- render ---------- */
+function render(){
+  $('v-cab').setAttribute('aria-pressed', S.view==='cabinet');
+  $('v-mail').setAttribute('aria-pressed', S.view==='mail');
+  const unread = S.mails.filter(m=>m.unread).length;
+  ['mail-count','bell-count'].forEach(id=>{$(id).textContent=unread; $(id).hidden=!unread;});
+  S.view==='cabinet' ? renderCabinet() : renderMail();
+}
+
+function renderCabinet(){
+  const avail = S.tenders.filter(t=>t.status==='available').length;
+  let h = `<div class="pagehead"><div><h1>Мої перемоги</h1>
+    <p>Торги, у яких ви визнані переможцем. Для договорів з відстрочкою оплати від 30 днів можна отримати фінансування в банку-партнері до того, як заплатить замовник.</p></div></div>`;
+  if(avail) h += `<div class="banner"><span class="ic">₴</span><div><b>Фінансування доступне для ${avail} ${plural(avail,'тендеру','тендерів','тендерів')}</b><br>
+    <span class="muted">Отримайте кошти за договором одразу, не чекаючи оплати від замовника. Замовник про фінансування не повідомляється. Фінансування надає ${BANK}.</span></div></div>`;
+  h += `<div class="reg" role="table" aria-label="Виграні тендери">
+    <div class="row head" role="row"><span>Тендер</span><span>Сума договору</span><span>Відстрочка оплати</span><span>Фінансування</span><span>Дія</span></div>`;
+  S.tenders.forEach(t=>{ h += rowHTML(t); });
+  h += `</div>`;
+  $('main').innerHTML = h;
+}
+
+function rowHTML(t){
+  const pill = `<span class="pill p-${t.status}">${t.status==='na'?'Відстрочка менше 30 днів':STATUS[t.status]}</span>`;
+  let act = '';
+  switch(t.status){
+    case 'available': act = `<button class="btn btn-p" data-a="process" data-k="${t.key}">Отримати фінансування</button>`; break;
+    case 'submitted': act = `<button class="btn btn-s" data-a="track" data-k="${t.key}">Переглянути заявку</button>`; break;
+    case 'review': act = `<button class="btn btn-s" data-a="track" data-k="${t.key}">Переглянути заявку</button>
+       <button class="btn btn-demo" data-a="bank" data-k="${t.key}">Демо: надіслати відповідь банку</button>`; break;
+    case 'offer': act = `<button class="btn btn-p" data-a="account" data-k="${t.key}">Відкрити рахунок у банку</button>
+       <button class="btn-l" data-a="toggle" data-k="${t.key}">${S.open.has(t.key)?'Сховати пропозицію':'Показати пропозицію'}</button>`; break;
+    case 'rejected': act = `<button class="btn btn-s" data-a="track" data-k="${t.key}">Деталі</button>`; break;
+    case 'account': act = `<button class="btn btn-s" data-a="account" data-k="${t.key}">Перейти на сайт банку</button>
+       <button class="btn-l" data-a="track" data-k="${t.key}">Статус заявки</button>`; break;
+    default: act = `<span class="na-note">Фінансування доступне для відстрочки від 30 днів</span>`;
+  }
+  let extra = '';
+  if(t.status==='offer' && S.open.has(t.key)) extra = offerHTML(t);
+  if(t.status==='rejected') extra = `<div class="offer rej"><b>Банк не може профінансувати цю угоду.</b> Ви можете подати заявку на фінансування інших тендерів. Відповідь надіслано на пошту ${fmtD(t.decidedAt||today)}.</div>`;
+  if(t.status==='account') extra = `<div class="offer acc"><b>Ви перейшли до відкриття рахунку в ${BANK}.</b> Далі договір, перерахування коштів і повернення фінансування ви узгоджуєте безпосередньо з банком. Сума за угодою: <span class="num">${fmtM(t.offer.deal)}</span>, ставка ${t.offer.rate}% річних.</div>`;
+  return `<div class="row" role="row" id="row-${t.key}">
+    <div class="c-t" role="cell"><div class="t-id"><span class="mono">${esc(t.id)}</span><span class="src">${t.src}</span></div>
+      <div class="t-subj">${esc(t.subj)}</div><div class="t-cust">${esc(t.cust)}</div></div>
+    <div role="cell"><span class="cell-l">Сума договору</span><span class="amt num">${fmtM(t.amount)}</span></div>
+    <div class="def" role="cell"><span class="cell-l">Відстрочка</span><b class="num">${t.def} днів</b><small>оплата до ${fmtD(t.payDate)}</small></div>
+    <div class="c-st" role="cell">${pill}</div>
+    <div class="c-act act" role="cell">${act}</div>
+    ${extra}
+  </div>`;
+}
+
+function offerHTML(t){
+  const o=t.offer;
+  return `<div class="offer" aria-label="Пропозиція банку">
+    <div class="kv"><span>Загальний ліміт</span><b class="num">${fmtM(o.limit)}</b><small>на всі угоди компанії</small></div>
+    <div class="kv"><span>Сума за угодою</span><b class="num">${fmtM(o.deal)}</b><small>${Math.round(o.deal/t.amount*100)}% суми договору</small></div>
+    <div class="kv"><span>Ставка</span><b class="num">${o.rate}% річних</b><small>фіксована</small></div>
+    <div class="kv"><span>Строк</span><b class="num">${o.term} днів</b><small>до оплати замовником</small></div>
+    <div class="kv"><span>Відсотки за строк</span><b class="num">≈ ${fmtM(o.cost)}</b><small>орієнтовно</small></div>
+    <div class="offer-foot"><span>Пропозиція від ${BANK} · отримано ${fmtD(o.at)} · дійсна до ${fmtD(o.valid)}</span>
+      <span>Щоб отримати кошти, відкрийте рахунок у банку.</span></div>
+  </div>`;
+}
+
+function renderMail(){
+  if(!S.sel) S.sel = S.mails[0] && S.mails[0].id;
+  const m = S.mails.find(x=>x.id===S.sel);
+  if(m) m.unread=false;
+  let list = S.mails.map(x=>{const c=mailContent(x);return `<button class="mi ${x.id===S.sel?'on':''} ${x.unread?'unread':''}" data-a="mail" data-k="${x.id}">
+      <div class="top"><b>${c.from}</b><span>${fmtD(x.at)}</span></div><div class="subj">${esc(c.subj)}</div></button>`}).join('');
+  const c = m ? mailContent(m) : null;
+  $('main').innerHTML = `<div class="pagehead"><div><h1>Пошта клієнта</h1><p>Так листи SmartTender виглядають у поштовій скриньці постачальника. Кнопки в листах ведуть у кабінет.</p></div></div>
+   <div class="mail"><div class="inbox"><h2>Вхідні · info@budtranspostach.ua</h2>${list}</div>
+   <div class="letter">${c?`<div class="meta"><h2>${esc(c.subj)}</h2>Від: ${c.from} &lt;noreply@smarttender&gt; · ${fmtD(m.at)}</div>
+     <div class="em"><div class="em-top"><div class="logo" style="font-size:16px"><i aria-hidden="true"></i>SmartTender</div></div>
+     <div class="em-in">${c.body}</div><div class="em-foot">Ви отримали цей лист, бо є учасником торгів на SmartTender. Фінансування надає ${BANK}; SmartTender діє як агент банку.</div></div>`:'<p class="muted">Листів немає</p>'}</div></div>`;
+  render.lastMail = true;
+  ['mail-count','bell-count'].forEach(id=>{const u=S.mails.filter(x=>x.unread).length;$(id).textContent=u;$(id).hidden=!u;});
+}
+
+function mailContent(m){
+  const t = byKey(m.t);
+  const card = `<div class="em-card"><div class="r"><span>Тендер</span><b class="mono">${esc(t.id)}</b></div>
+     <div class="r"><span>Предмет</span><b>${esc(t.subj)}</b></div>
+     <div class="r"><span>Сума договору</span><b class="num">${fmtM(t.amount)}</b></div>
+     <div class="r"><span>Відстрочка оплати</span><b>${t.def} днів</b></div></div>`;
+  const hi = '<p>Добрий день!</p>';
+  switch(m.kind){
+    case 'available': return {from:'SmartTender', subj:`Фінансування доступне по тендеру ${t.id}`,
+      body:`${hi}<p>Вітаємо з перемогою! Замовник оплатить цей договір через ${t.def} днів. Ви можете отримати кошти раніше — банк-партнер ${BANK} профінансує угоду.</p>${card}
+      <p>Що потрібно: подати фінансову звітність у кабінеті, отримати пропозицію банку і відкрити рахунок онлайн. Замовник про фінансування не повідомляється.</p>
+      <p><button class="btn btn-p" data-a="mailgo" data-k="${t.key}">Отримати фінансування</button></p>`};
+    case 'submitted': return {from:'SmartTender', subj:`Заявку на фінансування передано в банк — ${t.id}`,
+      body:`${hi}<p>Ми передали ваші документи до ${BANK}. Банк розгляне заявку і надішле пропозицію: загальний ліміт, суму за цією угодою та ставку.</p>${card}
+      <p>Відповідь прийде на цю пошту і з'явиться в кабінеті, у розділі «Мої перемоги».</p>
+      <p><button class="btn btn-s" data-a="mailcab" data-k="${t.key}">Відкрити кабінет</button></p>`};
+    case 'offer': { const o=t.offer; return {from:BANK+' через SmartTender', subj:`Пропозиція фінансування по тендеру ${t.id}`,
+      body:`${hi}<p>Банк ${BANK} розглянув вашу заявку і готовий профінансувати угоду.</p>
+      <div class="em-card"><div class="r"><span>Загальний ліміт</span><b class="num">${fmtM(o.limit)}</b></div>
+      <div class="r"><span>Сума за угодою</span><b class="num">${fmtM(o.deal)}</b></div>
+      <div class="r"><span>Ставка</span><b>${o.rate}% річних</b></div>
+      <div class="r"><span>Строк</span><b>${o.term} днів</b></div>
+      <div class="r"><span>Пропозиція дійсна до</span><b>${fmtD(o.valid)}</b></div></div>
+      <p>Щоб отримати кошти, відкрийте рахунок у банку онлайн — це займе близько 15 хвилин.</p>
+      <p><button class="btn btn-p" data-a="mailacc" data-k="${t.key}">Відкрити рахунок у банку</button></p>`};}
+    case 'rejected': return {from:BANK+' через SmartTender', subj:`Рішення щодо фінансування по тендеру ${t.id}`,
+      body:`${hi}<p>На жаль, банк ${BANK} не може профінансувати цю угоду.</p>${card}
+      <p>Ви можете подати заявку на фінансування інших тендерів з відстрочкою оплати від 30 днів.</p>
+      <p><button class="btn btn-s" data-a="mailcab" data-k="${t.key}">Перейти в кабінет</button></p>`};
+  }
+}
+
+/* ---------- modals ---------- */
+function openModal(html){ $('modal').innerHTML = html; $('overlay').hidden=false; const f=$('modal').querySelector('.btn-p:not(:disabled),.x'); f&&f.focus(); }
+function closeModal(){ $('overlay').hidden=true; $('modal').innerHTML=''; }
+const head = (title, sub)=>`<div class="m-head"><div><h2 id="m-title">${title}</h2>${sub?`<p>${sub}</p>`:''}</div><button class="x" data-a="close" aria-label="Закрити">×</button></div>`;
+const summary = t=>`<div class="summary"><div class="kv"><span>Тендер</span><b class="mono" style="font-size:13px">${esc(t.id)}</b><small>${esc(t.subj)}</small></div>
+  <div class="kv"><span>Сума договору</span><b class="num">${fmtM(t.amount)}</b></div>
+  <div class="kv"><span>Відстрочка</span><b class="num">${t.def} днів</b><small>оплата до ${fmtD(t.payDate)}</small></div></div>`;
+
+function stepsHTML(states, showDocs){
+  return `<ol class="steps">${STEPS.map((s,i)=>{
+    const st = states? states[i] : '';
+    const mark = st==='done'?'✓':st==='fail'?'!':(i+1);
+    let docs = '';
+    if(i===0 && showDocs) docs = `<ul class="doclist">${DOCS.map(d=>`<li>${d.name}${d.auto?' <span class="muted">— додається автоматично</span>':''}</li>`).join('')}</ul>`;
+    return `<li class="${st}"><span class="n">${mark}</span><div><h3>${s.t}<span class="who">${s.who}</span></h3><p>${s.d}</p>${docs}</div></li>`;
+  }).join('')}</ol>`;
+}
+
+function openProcess(k){
+  const t=byKey(k);
+  openModal(head('Фінансування за договором', `Банк-партнер ${BANK} профінансує угоду до того, як заплатить замовник`)+
+    `<div class="m-body">${summary(t)}${stepsHTML(null,true)}
+     <div class="note">Замовник про фінансування не повідомляється. Розгляд заявки — до 3 робочих днів. Подання заявки ні до чого вас не зобов’язує.</div></div>
+     <div class="m-foot"><button class="btn btn-s" data-a="close">Пізніше</button><button class="btn btn-p" data-a="upload" data-k="${k}">Подати документи</button></div>`);
+}
+
+let UP = null;
+function openUpload(k){
+  const t=byKey(k);
+  UP = {k, files:{contract:{name:`Dogovir_${t.id.replace(/[^\w-]/g,'')}.pdf`, size:1.2, auto:true}}, consent:false, err:{}};
+  drawUpload();
+}
+function drawUpload(){
+  const t=byKey(UP.k);
+  const req = DOCS.length, done = DOCS.filter(d=>UP.files[d.key]).length;
+  const ok = done===req && UP.consent;
+  openModal(head('Подання документів у банк', `Крок 1 з 5 · завантажено ${done} з ${req}`)+
+    `<div class="m-body">${summary(t)}<div class="ups">${DOCS.map(d=>upHTML(d)).join('')}</div>
+     <p class="prog" style="margin:10px 2px 0">Формати: PDF, XLSX/XLS (для ОСВ), JPG/PNG (для документів керівника). Один файл — до ${MAXMB} МБ. Кілька сторінок об’єднайте в один PDF.</p>
+     <label class="consent" for="consent"><input type="checkbox" id="consent" ${UP.consent?'checked':''}>
+      <span>Даю згоду на передачу документів і даних про цей тендер до АТ «${BANK}» для розгляду заявки на фінансування та на обробку персональних даних керівника.</span></label></div>
+     <div class="m-foot"><button class="btn btn-demo left" data-a="demofill">Демо: заповнити тестовими файлами</button>
+      <button class="btn btn-s" data-a="back" data-k="${UP.k}">Назад</button>
+      <button class="btn btn-p" data-a="submit" ${ok?'':'disabled'}>Надіслати в банк</button></div>`);
+  $('consent').addEventListener('change',e=>{UP.consent=e.target.checked; drawUpload(); $('consent').focus();});
+  $('modal').querySelectorAll('input[type=file]').forEach(inp=>{
+    inp.addEventListener('change',e=>{ if(e.target.files[0]) takeFile(inp.dataset.key, e.target.files[0]); });
+    const box = inp.closest('.up');
+    box.addEventListener('dragover',e=>{e.preventDefault();box.classList.add('drag')});
+    box.addEventListener('dragleave',()=>box.classList.remove('drag'));
+    box.addEventListener('drop',e=>{e.preventDefault();box.classList.remove('drag');const f=e.dataTransfer.files[0]; if(f) takeFile(inp.dataset.key,f);});
+  });
+}
+function upHTML(d){
+  const f = UP.files[d.key], err = UP.err[d.key];
+  const fmt = d.auto ? 'з торгів SmartTender' : d.fmt.map(x=>x.toUpperCase()).join(', ')+` · до ${MAXMB} МБ`;
+  let fileLine = '';
+  if(f) fileLine = `<div class="file"><span class="good">✓ ${f.auto?'Додано автоматично':'Завантажено'}</span><span class="fn">${esc(f.name)}</span><span class="muted">${f.size.toFixed(1)} МБ</span></div>`;
+  else if(err) fileLine = `<div class="file"><span class="bad">${esc(err)}</span></div>`;
+  const ctl = d.auto ? '' : `<span class="btn btn-s pick">${f?'Замінити':'Вибрати файл'}<input type="file" id="file-${d.key}" data-key="${d.key}" accept="${d.fmt.map(x=>'.'+x).join(',')}" aria-label="${d.name}"></span>`;
+  return `<div class="up ${f?'ok':''} ${err?'err':''}"><div><h4>${d.name} <span class="req" title="обов’язковий">*</span></h4><div class="hint">${d.hint}</div><div class="fmt">${fmt}</div></div>${ctl}${fileLine}</div>`;
+}
+function takeFile(key,file){
+  const d = DOCS.find(x=>x.key===key);
+  const ext = (file.name.split('.').pop()||'').toLowerCase();
+  const mb = file.size/1048576;
+  delete UP.err[key];
+  if(!d.fmt.includes(ext)){ UP.err[key]=`Файл «${file.name}» не підходить. Потрібен формат ${d.fmt.map(x=>x.toUpperCase()).join(' або ')}.`; delete UP.files[key]; }
+  else if(mb>MAXMB){ UP.err[key]=`Файл ${mb.toFixed(1)} МБ завеликий. Максимум — ${MAXMB} МБ.`; delete UP.files[key]; }
+  else UP.files[key]={name:file.name, size:Math.max(mb,0.1)};
+  drawUpload();
+}
+function demoFill(){ DOCS.forEach((d,i)=>{ if(!UP.files[d.key]) UP.files[d.key]={name:d.demo,size:0.4+i*0.7}; }); UP.err={}; drawUpload(); }
+
+function submitDocs(){
+  const t = byKey(UP.k);
+  t.status='submitted'; t.docsAt=new Date(); t.files=UP.files;
+  closeModal(); S.view='cabinet'; render(); flash(t.key);
+  addMail('submitted', t.key);
+  toast('Документи надіслано в банк. Відповідь прийде на пошту і в кабінет.');
+  setTimeout(()=>{ if(t.status==='submitted'){ t.status='review'; if(S.view==='cabinet') render(); } }, 1600);
+}
+
+function bankAnswer(k){
+  const t=byKey(k), sc=$('scenario').value;
+  t.decidedAt=new Date();
+  if(sc==='approve'){ t.status='offer'; t.offer=makeOffer(t,new Date()); S.open.add(k); addMail('offer',k); toast('Банк надіслав пропозицію. Тепер можна відкрити рахунок.'); }
+  else { t.status='rejected'; addMail('rejected',k); toast('Банк відмовив у фінансуванні. Лист надіслано клієнту.'); }
+  render(); flash(k);
+}
+
+function openAccount(k){
+  const t=byKey(k), o=t.offer;
+  openModal(head('Відкриття рахунку в банку', 'Ви переходите на сайт банку-партнера')+
+    `<div class="m-body"><div class="redirect"><div class="bank"><i aria-hidden="true"></i>${BANK}</div>
+      <p style="margin:0 auto;max-width:48ch">Відкрийте рахунок онлайн на сайті банку. Знадобиться КЕП керівника. Дані заявки та пропозиції банк уже має.</p></div>
+      <div class="summary" style="margin-top:16px"><div class="kv"><span>Сума за угодою</span><b class="num">${fmtM(o.deal)}</b></div>
+      <div class="kv"><span>Ставка</span><b class="num">${o.rate}% річних</b></div><div class="kv"><span>Строк</span><b class="num">${o.term} днів</b></div></div>
+      <div class="note">Після відкриття рахунку договір фінансування, перерахування коштів і повернення ви узгоджуєте безпосередньо з банком.</div></div>
+     <div class="m-foot"><button class="btn btn-s" data-a="close">Скасувати</button><button class="btn btn-p" data-a="go" data-k="${k}">Перейти на сайт ${BANK}</button></div>`);
+}
+function goBank(k){
+  const t=byKey(k);
+  closeModal(); t.status='account'; render(); flash(k);
+  toast('Демо: тут відкриється сторінка банку для дистанційного відкриття рахунку.');
+}
+
+function openTrack(k){
+  const t=byKey(k);
+  const map = {
+    submitted:['done','cur','','',''], review:['done','cur','','',''],
+    offer:['done','done','cur','',''], account:['done','done','cur','',''], rejected:['done','fail','','','']
+  }[t.status];
+  const files = t.files ? Object.values(t.files) : DOCS.map(d=>({name:d.demo||'Dogovir.pdf'}));
+  const msg = {submitted:'Документи передаються в банк.', review:'Банк розглядає заявку. Звичайно це займає до 3 робочих днів.',
+    offer:'Банк надіслав пропозицію. Відкрийте рахунок, щоб отримати кошти.', account:'Рахунок відкривається на сайті банку. Подальші кроки веде банк.',
+    rejected:'Банк відмовив у фінансуванні цієї угоди.'}[t.status];
+  openModal(head('Заявка на фінансування', STATUS[t.status]+(t.docsAt?` · подано ${fmtD(t.docsAt)}`:''))+
+    `<div class="m-body">${summary(t)}<div class="note" style="margin:0 0 16px">${msg}</div>${stepsHTML(map,false)}
+     <h3 style="font-size:14px;margin:4px 0 6px">Надіслані документи</h3><ul class="doclist">${files.map(f=>`<li class="mono">${esc(f.name)}</li>`).join('')}</ul></div>
+     <div class="m-foot"><button class="btn btn-s" data-a="close">Закрити</button>${t.status==='offer'?`<button class="btn btn-p" data-a="account" data-k="${k}">Відкрити рахунок у банку</button>`:''}</div>`);
+}
+
+/* ---------- helpers ---------- */
+function addMail(kind,k){ S.mails.unshift({id:'m'+Date.now()+Math.random().toString(36).slice(2,5), at:new Date(), unread:true, kind, t:k}); render(); }
+function flash(k){ const r=$('row-'+k); if(r){ r.classList.remove('flash'); void r.offsetWidth; r.classList.add('flash'); } }
+let tt; function toast(m){ const e=$('toast'); e.textContent=m; e.hidden=false; clearTimeout(tt); tt=setTimeout(()=>e.hidden=true,3800); }
+function plural(n,a,b,c){ const m10=n%10,m100=n%100; return m10===1&&m100!==11?a:(m10>=2&&m10<=4&&(m100<10||m100>=20)?b:c); }
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  const b = e.target.closest('[data-a]'); if(!b) return;
+  const k=b.dataset.k;
+  switch(b.dataset.a){
+    case 'process': openProcess(k); break;
+    case 'upload': openUpload(k); break;
+    case 'back': openProcess(k); break;
+    case 'demofill': demoFill(); break;
+    case 'submit': submitDocs(); break;
+    case 'close': closeModal(); break;
+    case 'bank': bankAnswer(k); break;
+    case 'toggle': S.open.has(k)?S.open.delete(k):S.open.add(k); render(); break;
+    case 'account': openAccount(k); break;
+    case 'go': goBank(k); break;
+    case 'track': openTrack(k); break;
+    case 'mail': S.sel=k; render(); break;
+    case 'mailgo': S.view='cabinet'; render(); { const t=byKey(k); t.status==='available'? openProcess(k) : (flash(k), toast('Заявку за цим тендером уже подано.')); } break;
+    case 'mailacc': S.view='cabinet'; render(); { const t=byKey(k); t.status==='offer'? openAccount(k) : flash(k); } break;
+    case 'mailcab': S.view='cabinet'; render(); flash(k); break;
+  }
+});
+$('overlay').addEventListener('click',e=>{ if(e.target.id==='overlay') closeModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !$('overlay').hidden) closeModal(); });
+$('v-cab').onclick=()=>{S.view='cabinet';render();};
+$('v-mail').onclick=()=>{S.view='mail';render();};
+$('bell').onclick=()=>{S.view='mail';S.sel=(S.mails.find(m=>m.unread)||S.mails[0]).id;render();};
+$('reset').onclick=()=>{closeModal(); S=seed(); $('scenario').value='approve'; render(); toast('Демо скинуто до початкового стану.');};
+render();
+})();
+</script>
+
+</body></html>
